@@ -10,7 +10,10 @@ import swaggerSpec from "./config/swagger.js";
 
 import ApiError from "./errors/index.js";
 import errorHandler from "./middleware/errorHandler.js";
-import groupRouter from "./routes/group.js";
+import teamRouter from "./routes/team.js";
+import gameRouter from "./routes/game.js";
+import tournamentRouter from "./routes/tournament.js";
+import { connectDB, disconnectDB } from "./config/db.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -41,14 +44,34 @@ app.get("/api-docs.json", (req, res) => {
 });
 
 // API routes
-app.use('/api/groups', groupRouter);
+app.use('/api/teams', teamRouter);
+app.use('/api/games', gameRouter);
+app.use('/api/tournament', tournamentRouter);
 
 app.use((req, res, next) => next(ApiError.notFound("Route not found")));
 
 app.use(errorHandler);
 
+async function shutdown(signal) {
+  console.log(`${signal} received, closing...`);
+  await disconnectDB();
+  server.close(() => {
+    process.exit(0);
+  });
+}
 
-server.listen(port, () => {
+process.once("SIGINT", () => shutdown("SIGINT"));
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+
+async function start() {
+  await connectDB();
+  server.listen(port, () => {
     console.log(`Server is running on port ${port}...`);
     console.log(`API Documentation available at http://localhost:${port}/api/swagger`);
+  });
+}
+
+start().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
 });
