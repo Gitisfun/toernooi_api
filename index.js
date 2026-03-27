@@ -10,6 +10,7 @@ import swaggerSpec from "./config/swagger.js";
 
 import ApiError from "./errors/index.js";
 import errorHandler from "./middleware/errorHandler.js";
+import apiKey from "./middleware/apiKey.js";
 import teamRouter from "./routes/team.js";
 import gameRouter from "./routes/game.js";
 import tournamentRouter from "./routes/tournament.js";
@@ -18,6 +19,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 3004;
+const isDevApiEnvironment = process.env.API_ENVIRONMENT === "DEV";
 
 app.use(cors());
 app.use(express.json());
@@ -28,20 +30,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Swagger UI - accessible without API key
-app.use("/api/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "Malibu API Documentation",
-}));
+app.use(apiKey);
 
-// API key validation for protected routes
-//app.use(validateApiKey);
+// Swagger (only when API_ENVIRONMENT=DEV; paths bypass apiKey in middleware)
+if (isDevApiEnvironment) {
+  app.use("/api/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "Malibu API Documentation",
+  }));
 
-// Serve swagger spec as JSON
-app.get("/api-docs.json", (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.send(swaggerSpec);
-});
+  app.get("/api-docs.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerSpec);
+  });
+}
 
 // API routes
 app.use('/api/teams', teamRouter);
@@ -67,7 +69,11 @@ async function start() {
   await connectDB();
   server.listen(port, () => {
     console.log(`Server is running on port ${port}...`);
-    console.log(`API Documentation available at http://localhost:${port}/api/swagger`);
+    if (isDevApiEnvironment) {
+      console.log(
+        `API Documentation available at http://localhost:${port}/api/swagger`
+      );
+    }
   });
 }
 
