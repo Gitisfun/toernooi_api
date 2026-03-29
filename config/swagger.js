@@ -27,6 +27,10 @@ const options = {
         name: 'Tournament',
         description: 'Tournament schedule, setup, and reset',
       },
+      {
+        name: 'Drinks',
+        description: 'Per-team drink counts in the oppem database',
+      },
     ],
     components: {
       schemas: {
@@ -53,6 +57,31 @@ const options = {
           required: ['deletedCount'],
           properties: {
             deletedCount: { type: 'integer', description: 'Teams removed' },
+          },
+        },
+        Drink: {
+          type: 'object',
+          required: ['id', 'team', 'amount'],
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Same as the linked team id when created via POST /drinks',
+            },
+            team: { $ref: '#/components/schemas/Team' },
+            amount: { type: 'number' },
+          },
+        },
+        DrinkUpdate: {
+          type: 'object',
+          properties: {
+            amount: { type: 'number', description: 'Finite number' },
+          },
+        },
+        DrinksDeleteAllResponse: {
+          type: 'object',
+          required: ['deletedCount'],
+          properties: {
+            deletedCount: { type: 'integer', description: 'Drinks removed' },
           },
         },
         Game: {

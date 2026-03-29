@@ -1,6 +1,7 @@
 import express from "express";
 import * as gameService from "../services/game.js";
 import * as tournamentService from "../services/tournament.js";
+import { getIO } from "../config/socket.js";
 
 const router = express.Router();
 
@@ -70,6 +71,7 @@ router.post("/", async (req, res, next) => {
   try {
     const game = await gameService.saveGame(req.body);
     await tournamentService.tryFillKnockoutFromGroupStandings();
+    getIO().emit("games:updated");
     res.status(201).json(game);
   } catch (err) {
     next(err);
@@ -139,6 +141,7 @@ router.patch("/:id", async (req, res, next) => {
   try {
     const game = await gameService.updateGame(req.params.id, req.body);
     await tournamentService.tryFillKnockoutFromGroupStandings();
+    getIO().emit("games:updated");
     res.json(game);
   } catch (err) {
     next(err);
@@ -165,6 +168,7 @@ router.patch("/:id", async (req, res, next) => {
 router.delete("/", async (req, res, next) => {
   try {
     const result = await gameService.deleteAllGames();
+    getIO().emit("games:updated");
     res.json(result);
   } catch (err) {
     next(err);

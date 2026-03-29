@@ -14,10 +14,13 @@ import apiKey from "./middleware/apiKey.js";
 import teamRouter from "./routes/team.js";
 import gameRouter from "./routes/game.js";
 import tournamentRouter from "./routes/tournament.js";
+import drinkRouter from "./routes/drink.js";
 import { connectDB, disconnectDB } from "./config/db.js";
+import { initSocket } from "./config/socket.js";
 
 const app = express();
 const server = http.createServer(app);
+initSocket(server);
 const port = process.env.PORT || 3004;
 const isDevApiEnvironment = process.env.API_ENVIRONMENT === "DEV";
 
@@ -49,6 +52,7 @@ if (isDevApiEnvironment) {
 app.use('/api/teams', teamRouter);
 app.use('/api/games', gameRouter);
 app.use('/api/tournament', tournamentRouter);
+app.use('/api/drinks', drinkRouter);
 
 app.use((req, res, next) => next(ApiError.notFound("Route not found")));
 

@@ -1,5 +1,6 @@
 import express from "express";
 import * as tournamentService from "../services/tournament.js";
+import { getIO } from "../config/socket.js";
 
 const router = express.Router();
 
@@ -62,6 +63,7 @@ router.get("/", async (req, res, next) => {
 router.post("/order", async (req, res, next) => {
   try {
     const result = await tournamentService.reorderTournamentGames(req.body);
+    getIO().emit("games:updated");
     res.json(result);
   } catch (err) {
     next(err);

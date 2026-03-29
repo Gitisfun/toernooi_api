@@ -22,10 +22,16 @@ const KO_TIME_QF_4 = { startHour: "16:40", endHour: "17:00" };
 const KO_TIME_SEMI = { startHour: "17:10", endHour: "17:30" };
 const KO_TIME_FINAL = { startHour: "17:40", endHour: "18:10" };
 
+/** Laatste plaats */
 const KO_TERRAIN_LAST_PLACE = "Terrein 2";
-/** QF indices 0–3: 1st & 3rd → Terrein 1, 2nd & 4th → Terrein 2 */
-const KO_TERRAIN_QF = ["Terrein 1", "Terrein 2", "Terrein 1", "Terrein 2"];
-const KO_TERRAIN_SF = ["Terrein 1", "Terrein 2"];
+/** Kwartfinale 1 & 3 → Terrein 1; 2 & 4 → Terrein 2 */
+function terrainForQuarterFinal(oneBasedIndex) {
+  return oneBasedIndex % 2 === 1 ? "Terrein 1" : "Terrein 2";
+}
+/** Halve finale 1 → Terrein 1; halve finale 2 → Terrein 2 */
+function terrainForSemiFinal(oneBasedIndex) {
+  return oneBasedIndex % 2 === 1 ? "Terrein 1" : "Terrein 2";
+}
 const KO_TERRAIN_FINAL = "Terrein 1";
 
 /** Fixed pitch windows: two group-stage games run in parallel per slot. */
@@ -88,18 +94,26 @@ function buildKnockoutPlaceholderDocs() {
 
   const qfTimes = [KO_TIME_QF_1, KO_TIME_QF_2_3, KO_TIME_QF_2_3, KO_TIME_QF_4];
   for (let i = 0; i < 4; i++) {
+    const qfNumber = i + 1;
     docs.push({
       _id: `tour-ko-qf-${i}`,
-      ...base({ ...qfTimes[i], terrain: KO_TERRAIN_QF[i] }),
+      ...base({
+        ...qfTimes[i],
+        terrain: terrainForQuarterFinal(qfNumber),
+      }),
       round: ROUND_QUARTER_FINAL,
       order: order++,
     });
   }
 
   for (let i = 0; i < 2; i++) {
+    const semiNumber = i + 1;
     docs.push({
       _id: `tour-ko-sf-${i}`,
-      ...base({ ...KO_TIME_SEMI, terrain: KO_TERRAIN_SF[i] }),
+      ...base({
+        ...KO_TIME_SEMI,
+        terrain: terrainForSemiFinal(semiNumber),
+      }),
       round: ROUND_SEMI_FINAL,
       order: order++,
     });
